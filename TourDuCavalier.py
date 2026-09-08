@@ -8,7 +8,7 @@ def initialiseBoard(board:list, boardSize:int)->list:
         board (list): liste vide qui représentera l'échiquier
     """
     for row in range(boardSize):
-        board.append([0]*boardSize*boardSize)
+        board.append([0]*boardSize)
 
 def numberOfSpaceCanMoveTo(startingColumn:int,startingRow:int,boardSize:int)->int:
     """_summary_
@@ -22,12 +22,12 @@ def numberOfSpaceCanMoveTo(startingColumn:int,startingRow:int,boardSize:int)->in
         countPossibleMovement int: Nombre de mouvements possibles.
     """
     global knightsMovements
-    countPossibleMovement=0
+    countPossibleMovement : int = 0
     for space in knightsMovements:
-        currentColumn=startingColumn+space[0]
-        currentRow=startingRow+space[1]
-        if(currentColumn<boardSize and currentColumn>=0 and currentRow>=0 and currentRow<boardSize):
-            countPossibleMovement+=1
+        currentColumn = startingColumn + space[0]
+        currentRow = startingRow + space[1]
+        if(currentColumn < boardSize and currentColumn>=0 and currentRow>=0 and currentRow<boardSize):
+            countPossibleMovement += 1
     return countPossibleMovement
 
 def hamiltonGraphMaker(board:list)->list:
