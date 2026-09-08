@@ -1,15 +1,62 @@
 knightsMovements=[(2,1),(2,-1),(-2,1),(-2,-1),(1,2),(1,-2),(-1,2),(-1,-2)] #Liste des mouvements possibles du cavalier en coordonnées relatives.
 continue_to_play=True #Booléen contrôlant la répétition du programme.
 
-def initialiseBoard(board:list, boardSize:int)->list:
-    """_summary_
-        Initialise un échiquier vide en remplissant une liste avec des zéros.
-    Args:
-        board (list): liste vide qui représentera l'échiquier
-    """
-    for row in range(boardSize):
-        board.append([0]*boardSize)
+class ListOfMoves:
+    def __init__(self,listOfMoves:list | None = None):
+        self.__list_of_moves : list = [] if listOfMoves is None else listOfMoves
+        self.__is_solution : bool = False
 
+    def addMove(self,columnPosition: int, rowPosition:int):
+        self.__list_of_moves.append((columnPosition,rowPosition))
+
+    def removeMove(self,columnPosition: int, rowPosition:int):
+        if(len(self.__list_of_moves)==0):
+            return
+        try:
+            self.__list_of_moves.remove((columnPosition,rowPosition))
+        except:
+            print("Move not in list")
+
+    def getNumberOfMoves(self)->int:
+        return len(self.__list_of_moves)
+
+    def getListOfMoves(self)->list:
+        return self.__list_of_moves
+
+    def isListOfMovesFull(self,boardSize:int)->bool:
+        return len(self.__list_of_moves) == boardSize*boardSize
+
+    def isSolution(self,boardSize:int)->bool:
+        """_summary_
+        Vérifie si la solution trouvée couvre bien toutes les cases de l'échiquier un seull foi.
+        Args:
+            boardSize (int): Taille de l'échiquier.
+
+        Returns:
+            bool: Indique si la solution est correcte.
+        """
+        if(self.__is_solution == True):
+            return True
+        
+        if(not self.isListOfMovesFull(boardSize)):
+            return False
+
+        copyList = self.__list_of_moves.copy()
+
+        try:
+            for i in range(0,boardSize):
+                for j in range(0,boardSize):
+                    copyList.remove((i,j))
+        except:
+            print("Un des coups n'est pas dans la liste")
+            self.__is_solution = False
+            return False
+        if(len(copyList)==0):
+            self.__is_solution = True
+        else:
+            self.__is_solution = False
+        return self.__is_solution
+    
 def numberOfSpaceCanMoveTo(startingColumn:int,startingRow:int,boardSize:int)->int:
     """_summary_
     Calcule le nombre de cases valides accessibles depuis une position donnée.
@@ -30,7 +77,18 @@ def numberOfSpaceCanMoveTo(startingColumn:int,startingRow:int,boardSize:int)->in
             countPossibleMovement += 1
     return countPossibleMovement
 
-def hamiltonGraphMaker(board:list)->list:
+
+def initialiseBoard(board:list, boardSize:int)->list:
+    """_summary_
+        Initialise un échiquier vide en remplissant une liste avec des zéros.
+    Args:
+        board (list): liste vide qui représentera l'échiquier
+    """
+    for row in range(boardSize):
+        board.append([0]*boardSize)
+
+
+def hamiltonGraphMaker(boardSize:int)->list:
     """_summary_
     Construit une graph hamiltonnien indiquant le nombre de déplacements possibles pour chaque case.
     Args:
@@ -41,13 +99,13 @@ def hamiltonGraphMaker(board:list)->list:
     """
     hamiltonGraph = []
     countPossibleMovement = 0
-    for column in range(len(board)):
-            hamiltonGraph.append([])
-            for row in range(len(board[column])):
-                #print(column,";",row)
-                countPossibleMovement=numberOfSpaceCanMoveTo(column,row,len(board))
-                #print(countPossibleMovement)
-                hamiltonGraph[column].append(countPossibleMovement)
+    for column in range(boardSize):
+        hamiltonGraph.append([])
+        for row in range(boardSize):
+            #print(column,";",row)
+            countPossibleMovement=numberOfSpaceCanMoveTo(column,row,boardSize)
+            #print(countPossibleMovement)
+            hamiltonGraph[column].append(countPossibleMovement)
     return  hamiltonGraph
 
 def updatingHamiltonGraph(startingColumn:int,startingRow:int,hamiltonGraph:list,Update:bool):
@@ -100,55 +158,36 @@ def getPriorityMoves(column:int,row:int,hamiltongraph:list,boardSize:int)->list:
             priorityMoves.sort()
     return priorityMoves
 
-def solving(boardSize:int,listOfMoves:list,hamiltongraph:list,column:int,row:int)->tuple:
+def solving(boardSize:int,hamiltongraph:list,column:int,row:int,listOfMoves:ListOfMoves | None = None)->ListOfMoves:
     """_summary_
     Résout le problème du tour du cavalier en utilisant une approche récursive avec l'algorithme de résolution rapide bassé sur la recherche du meilleur coût à chaque tour
     
     Args:
         boardSize (int): Taille de l'échiquier
-        listOfMoves (list): Liste des mouvements effectués
+        currentBoardState (list): Liste des mouvements effectués
         hamiltongraph (list): Matrice des mouvements possibles
         column (int): Colonne actuelle
         row (int): Ligne actuelle
 
     Returns:
-        tuple(bool, list): Statut de réussite et liste des mouvements déjà effectuer
+        ListOfMoves: List des mouvements réalisé
     """
+    if listOfMoves is None:
+        listOfMoves = ListOfMoves()
     updatingHamiltonGraph(column,row,hamiltongraph,True)
-    listOfMoves.append((column,row))
-    #print(len(listOfMoves))
-    if(len(listOfMoves)==boardSize*boardSize):
-        return (True,listOfMoves)
-    priorityMoves=getPriorityMoves(column,row,hamiltongraph,boardSize)
+    listOfMoves.addMove(column,row)
+    #print(len(currentBoardState))
+    if(listOfMoves.isSolution(boardSize)):
+        return listOfMoves
+    priorityMoves : list = getPriorityMoves(column,row,hamiltongraph,boardSize)
     for move in priorityMoves:
         if(move[0]>=0):
-            result = solving(boardSize,listOfMoves,hamiltongraph,move[1],move[2])
-            if(result[0]):
-                return result
-            listOfMoves.remove((move[1],move[2]))
+            listOfMoves : ListOfMoves = solving(boardSize,hamiltongraph,move[1],move[2],listOfMoves)
+            if(listOfMoves.isSolution(boardSize)):
+                return listOfMoves
+            listOfMoves.removeMove(move[1],move[2])
             updatingHamiltonGraph(move[1],move[2],hamiltongraph,False)
-    return (False,[])
-
-def solverChecker(listOfMoves:list,boardSize:int)->bool:
-    """_summary_
-    Vérifie si la solution trouvée couvre bien toutes les cases de l'échiquier un seull foi.
-    Args:
-        listOfMoves (list): Liste des déplacements du cavalier.
-        boardSize (int): Taille de l'échiquier.
-
-    Returns:
-        bool: Indique si la solution est correcte.
-    """
-    try:
-        for i in range(0,boardSize):
-            for j in range(0,boardSize):
-                    listOfMoves.remove((i,j))
-    except:
-        print("Un des coups n'est pas dans la liste")
-        return False
-    if(len(listOfMoves)==0):
-        return True
-    return False
+    return ListOfMoves([])
 
 def printBoard(board:list):
     """_summary_
@@ -180,18 +219,21 @@ MAX_BOARD_SIZE : int = 31
 DEFAULT_POSITION : int = 0
 
 boardSizeInput : str
+columnPositionInput : str
 rowPositionInput : str
-lignePositionInput : str
 
 boardSize : int
+columnPosition : int
 rowPosition : int
-lignePosition : int
 
 board : list
 
+resultListOfMoves : ListOfMoves
+
 while(continue_to_play):
+    columnPosition = INVALIDE_SIZE_VALUE # reset the values on start
     rowPosition = INVALIDE_SIZE_VALUE # reset the values on start
-    lignePosition = INVALIDE_SIZE_VALUE # reset the values on start
+    resultListOfMoves = ListOfMoves()
 
     try:
         boardSizeInput = input("Rentrer la taille de l'échiquier que le cavalier va parcourir (par exemple: 5 pour 5X5): ") #Taille de l'échiquier
@@ -209,40 +251,38 @@ while(continue_to_play):
     elif(boardSize > MAX_BOARD_SIZE):
         print(f"La taille d'échéquier que vous avez rentrée est trop grande pour que l'algorithme puisse le résoudre (max:{MAX_BOARD_SIZE})")
     else:
-        while(rowPosition < 0 or rowPosition>=boardSize):#test si la valeur rentrée est correct
+        while(columnPosition < 0 or columnPosition>=boardSize):#test si la valeur rentrée est correct
             try:
-                rowPositionInput = input(f"Rentrer la colonne de 0 à {boardSize-1} sur laquelle le cavalier vas commencer son tour: ") #Position initiale en colonne
-                rowPosition = int(rowPositionInput)
+                columnPositionInput = input(f"Rentrer la colonne de 0 à {boardSize-1} sur laquelle le cavalier vas commencer son tour: ") #Position initiale en colonne
+                columnPosition = int(columnPositionInput)
             except:
                 print("Vous avez rentré une valeur non conforme, la colonne de départ sera la ",DEFAULT_POSITION)
-                rowPosition = DEFAULT_POSITION
+                columnPosition = DEFAULT_POSITION
 
-        while(lignePosition < 0 or lignePosition>=boardSize):#test si la valeur rentrée est correct
+        while(rowPosition < 0 or rowPosition>=boardSize):#test si la valeur rentrée est correct
             try:
-                lignePositionInput = input(f"Rentrer la ligne de 0 à {boardSize-1} sur laquelle le cavalier va commencer son tour: ") #Position initiale en ligne
-                lignePosition = int(lignePositionInput)
+                rowPositionInput = input(f"Rentrer la ligne de 0 à {boardSize-1} sur laquelle le cavalier va commencer son tour: ") #Position initiale en ligne
+                rowPosition = int(rowPositionInput)
             except:
                 print("Vous avez rentré une valeur non conforme, la ligne de départ sera la ",DEFAULT_POSITION)
-                lignePosition = DEFAULT_POSITION
+                rowPosition = DEFAULT_POSITION
         print("")
-        input(f"Tout est prêt! Appuyez sur Entrée pour générer la solution au problème du tour du cavalier sur un plateau de {boardSize} par {boardSize} avec la position de départ à la case ({rowPosition},{lignePosition}) ")
+        input(f"Tout est prêt! Appuyez sur Entrée pour générer la solution au problème du tour du cavalier sur un plateau de {boardSize} par {boardSize} avec la position de départ à la case ({columnPosition},{rowPosition}) ")
 
-        board = []
-        initialiseBoard(board,boardSize)
-        hamiltongraph = hamiltonGraphMaker(board)
+        hamiltongraph = hamiltonGraphMaker(boardSize)
         try:
-            result = solving(len(board),[],hamiltongraph,rowPosition,lignePosition)
-            copyList = result[1].copy() #La liste des coups est comprit dans res[1]
-            if(not result[0] or not solverChecker(copyList,len(board))):
-                print("Aucune solution n'a été trouvée pour un échiquier de ",boardSize," par ",boardSize)
+            resultListOfMoves = solving(boardSize,hamiltongraph,columnPosition,rowPosition,resultListOfMoves)
+
+            if(resultListOfMoves.isSolution(boardSize)):
+                print("Une des solutions est:",resultListOfMoves.getListOfMoves()) #affiche la solution
             else:
-                print("Une des solutions est:",result[1]) #affiche la solution
+                print(f"Aucune solution n'a été trouvée pour un échiquier de {boardSize} par {boardSize} avec la position de départ à la case ({columnPosition},{rowPosition})")
         except RecursionError:
             print(f"La taille de l'échiquier est trop grande pour que l'algorithme puisse résoudre le tour du cavalier (max:{MAX_BOARD_SIZE})")
 
     print("Voulez-vous recommencer?  (Tapper 'Non' pour quitter)")
-    choix=str(input("")).lower() #Permet de rejouer ou quitter le programme
-    if(choix=="non" or choix=="n" or choix=="no"):
+    choice = str(input("")).lower() #Permet de rejouer ou quitter le programme
+    if(choice=="non" or choice=="n" or choice=="no"):
         continue_to_play = False
     
 print("Au revoire !")
