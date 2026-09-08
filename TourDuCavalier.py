@@ -3,13 +3,26 @@ continue_to_play=True #Booléen contrôlant la répétition du programme.
 
 class ListOfMoves:
     def __init__(self,listOfMoves:list | None = None):
+        """Create a move list, optionally initialized with existing moves."""
         self.__list_of_moves : list = [] if listOfMoves is None else listOfMoves
         self.__is_solution : bool = False
 
     def addMove(self,columnPosition: int, rowPosition:int):
+        """Add a board position to the end of the move list.
+
+        Args:
+            columnPosition: The column of the move.
+            rowPosition: The row of the move.
+        """
         self.__list_of_moves.append((columnPosition,rowPosition))
 
     def removeMove(self,columnPosition: int, rowPosition:int):
+        """Remove a board position from the move list if it is present.
+
+        Args:
+            columnPosition: The column of the move.
+            rowPosition: The row of the move.
+        """
         if(len(self.__list_of_moves)==0):
             return
         try:
@@ -18,22 +31,29 @@ class ListOfMoves:
             print("Move not in list")
 
     def getNumberOfMoves(self)->int:
+        """Return the number of moves currently stored."""
         return len(self.__list_of_moves)
 
     def getListOfMoves(self)->list:
+        """Return the list of stored board positions."""
         return self.__list_of_moves
 
     def isListOfMovesFull(self,boardSize:int)->bool:
+        """Return whether the list contains one move for every board square.
+
+        Args:
+            boardSize: The length of one side of the square board.
+        """
         return len(self.__list_of_moves) == boardSize*boardSize
 
     def isSolution(self,boardSize:int)->bool:
-        """_summary_
-        Vérifie si la solution trouvée couvre bien toutes les cases de l'échiquier un seull foi.
+        """Return whether the moves cover every board square exactly once.
+
         Args:
-            boardSize (int): Taille de l'échiquier.
+            boardSize: The length of one side of the square board.
 
         Returns:
-            bool: Indique si la solution est correcte.
+            True if the move list is a valid knight's tour, otherwise False.
         """
         if(self.__is_solution == True):
             return True
@@ -58,15 +78,15 @@ class ListOfMoves:
         return self.__is_solution
     
 def numberOfSpaceCanMoveTo(startingColumn:int,startingRow:int,boardSize:int)->int:
-    """_summary_
-    Calcule le nombre de cases valides accessibles depuis une position donnée.
+    """Count the valid board squares reachable from a position.
+
     Args:
-        startingColumn (int):  Colonne de départ.
-        startingRow (int):  Ligne de départ.
-        boardSize (int): Taille de l'échiquier.
+        startingColumn: The starting column.
+        startingRow: The starting row.
+        boardSize: The length of one side of the square board.
 
     Returns:
-        countPossibleMovement int: Nombre de mouvements possibles.
+        The number of valid knight moves from the starting position.
     """
     global knightsMovements
     countPossibleMovement : int = 0
@@ -79,23 +99,24 @@ def numberOfSpaceCanMoveTo(startingColumn:int,startingRow:int,boardSize:int)->in
 
 
 def initialiseBoard(board:list, boardSize:int)->list:
-    """_summary_
-        Initialise un échiquier vide en remplissant une liste avec des zéros.
+    """Fill a board list with empty rows initialized to zero.
+
     Args:
-        board (list): liste vide qui représentera l'échiquier
+        board: The list that will represent the board.
+        boardSize: The length of one side of the square board.
     """
     for row in range(boardSize):
         board.append([0]*boardSize)
 
 
 def hamiltonGraphMaker(boardSize:int)->list:
-    """_summary_
-    Construit une graph hamiltonnien indiquant le nombre de déplacements possibles pour chaque case.
+    """Build a graph containing the available moves for every board square.
+
     Args:
-        board (list): La liste qui représentera l'échiquier.
+        boardSize: The length of one side of the square board.
 
     Returns:
-        list: le graph hamiltonnien des déplacements possible du cavalier sur l'échiquier
+        A matrix containing the number of possible knight moves for each square.
     """
     hamiltonGraph = []
     countPossibleMovement = 0
@@ -109,13 +130,14 @@ def hamiltonGraphMaker(boardSize:int)->list:
     return  hamiltonGraph
 
 def updatingHamiltonGraph(startingColumn:int,startingRow:int,hamiltonGraph:list,Update:bool):
-    """_summary_
-    Met à jour la matrice de graphes hamiltoniens après le passage du cavalier.
+    """Update move counts after visiting or backtracking from a square.
+
     Args:
-        startingColumn (int): Colonne actuelle.
-        startingRow (int): Ligne actuelle.
-        hamiltonGraph (list): graph hamiltonnien des déplacements possible du cavalier
-        Update (bool): Indique si on ajoute ou enlève un mouvement possible
+        startingColumn: The column of the current square.
+        startingRow: The row of the current square.
+        hamiltonGraph: The matrix of remaining move counts.
+        Update: If True, mark the square visited and decrease neighboring counts;
+            otherwise, restore the square and increase neighboring counts.
     """
     global knightsMovements
     if(Update): #Si on update, on met la case courante à -1
@@ -137,16 +159,16 @@ def updatingHamiltonGraph(startingColumn:int,startingRow:int,hamiltonGraph:list,
                     
                     
 def getPriorityMoves(column:int,row:int,hamiltongraph:list,boardSize:int)->list:
-    """_summary_
-    Renvoie les mouvements valides triés par ordre croissant du nombre de possibilités restantes.
+    """Return valid next moves sorted by remaining move count.
+
     Args:
-        column (int): Colonne actuelle
-        row (int): Ligne actuelle
-        hamiltongraph (list): graph hamiltonnien des déplacements possible du cavalier
-        boardSize (int): Taille de l'échiquier.
+        column: The current column.
+        row: The current row.
+        hamiltongraph: The matrix of remaining move counts.
+        boardSize: The length of one side of the square board.
 
     Returns:
-        list: Liste des mouvements classés par priorité.
+        A list of moves ordered from fewest to most remaining options.
     """
     global knightsMovements
     priorityMoves=[]
@@ -159,18 +181,20 @@ def getPriorityMoves(column:int,row:int,hamiltongraph:list,boardSize:int)->list:
     return priorityMoves
 
 def solving(boardSize:int,hamiltongraph:list,column:int,row:int,listOfMoves:ListOfMoves | None = None)->ListOfMoves:
-    """_summary_
-    Résout le problème du tour du cavalier en utilisant une approche récursive avec l'algorithme de résolution rapide bassé sur la recherche du meilleur coût à chaque tour
+    """Solve the knight's tour using recursive Warnsdorff-style backtracking.
+
+    The next square is selected according to the number of remaining moves,
+    prioritizing squares with fewer available options.
     
     Args:
-        boardSize (int): Taille de l'échiquier
-        currentBoardState (list): Liste des mouvements effectués
-        hamiltongraph (list): Matrice des mouvements possibles
-        column (int): Colonne actuelle
-        row (int): Ligne actuelle
+        boardSize: The length of one side of the square board.
+        hamiltongraph: The matrix of remaining move counts.
+        column: The current column.
+        row: The current row.
+        listOfMoves: The moves already made, or None to start a new solution.
 
     Returns:
-        ListOfMoves: List des mouvements réalisé
+        The completed solution, or an empty move list if no solution is found.
     """
     if listOfMoves is None:
         listOfMoves = ListOfMoves()
@@ -190,10 +214,10 @@ def solving(boardSize:int,hamiltongraph:list,column:int,row:int,listOfMoves:List
     return ListOfMoves([])
 
 def printBoard(board:list):
-    """_summary_
-    Affiche l'échiquier (ou graph) sous forme textuelle.
+    """Print a board or move graph in a simple text-based format.
+
     Args:
-        board (list): L'échiquier (ou graph) à afficher.
+        board: The board or graph to print.
     """
     for elements in range(len(board)*2+1):
         print("-",end="")
