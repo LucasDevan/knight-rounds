@@ -1,5 +1,13 @@
+import sys
+
 knightsMovements=[(2,1),(2,-1),(-2,1),(-2,-1),(1,2),(1,-2),(-1,2),(-1,-2)] #Liste des mouvements possibles du cavalier en coordonnées relatives.
-continue_to_play=True #Booléen contrôlant la répétition du programme.
+
+INVALIDE_SIZE_VALUE : int = -1
+MIN_BOARD_SIZE : int = 1
+UNSOLVABLE_SIZES : list = [2,3]
+MAX_BOARD_SIZE : int = 31
+
+DEFAULT_POSITION : int = 0
 
 class ListOfMoves:
     def __init__(self,listOfMoves:list | None = None):
@@ -213,25 +221,26 @@ def solving(boardSize:int,hamiltongraph:list,column:int,row:int,listOfMoves:List
             updatingHamiltonGraph(move[1],move[2],hamiltongraph,False)
     return ListOfMoves([])
 
-def setUpAndSolves(boardSize:int,columnPosition:int,rowPosition:int)->ListOfMoves:
-    resultListOfMoves = ListOfMoves()
-
+def setUpAndSolves(boardSize:int,columnPosition:int,rowPosition:int)->str:
     if(boardSize == INVALIDE_SIZE_VALUE or boardSize < MIN_BOARD_SIZE or boardSize in UNSOLVABLE_SIZES or boardSize >MAX_BOARD_SIZE):
-        return resultListOfMoves
+        return "Wrong value"
     elif(boardSize == MIN_BOARD_SIZE):
-        resultListOfMoves.addMove(0,0)
-        resultListOfMoves.isSolution(1)
-        return resultListOfMoves
+        return "[(0,0)]"
 
     if(columnPosition < 0 or columnPosition>=boardSize):#test si la valeur rentrée est correct
         columnPosition = DEFAULT_POSITION
 
     if(rowPosition < 0 or rowPosition>=boardSize):#test si la valeur rentrée est correct
         rowPosition = DEFAULT_POSITION
-    
+
     hamiltongraph = hamiltonGraphMaker(boardSize)
-    resultListOfMoves = solving(boardSize,hamiltongraph,columnPosition,rowPosition,resultListOfMoves)
-    return resultListOfMoves
+    resultListOfMoves = ListOfMoves()
+    solvedMoves = solving(boardSize,hamiltongraph,columnPosition,rowPosition,resultListOfMoves)
+
+    if(solvedMoves.isSolution(boardSize)):
+        return str(solvedMoves.getListOfMoves())
+
+    return "No solution found"
 
 def printBoard(board:list):
     """Print a board or move graph in a simple text-based format.
@@ -251,82 +260,80 @@ def printBoard(board:list):
             print("-",end="")
         print("")
 
-print("Bienvenue dans le jeu du tour du cavalier!")
-print("Dans ce jeu, un cavalier doit parcourir toutes les cases d'un échiquier sans repasser par la même deux fois!")
-print("Ce programme va automatiquement résoudre ce tour avant d'afficher la liste des mouvements effectués par le cavalier"+'\n')
+def main():
+    print("Bienvenue dans le jeu du tour du cavalier!")
+    print("Dans ce jeu, un cavalier doit parcourir toutes les cases d'un échiquier sans repasser par la même deux fois!")
+    print("Ce programme va automatiquement résoudre ce tour avant d'afficher la liste des mouvements effectués par le cavalier"+'\n')
 
-INVALIDE_SIZE_VALUE : int = -1
-MIN_BOARD_SIZE : int = 1
-UNSOLVABLE_SIZES : list = [2,3]
-MAX_BOARD_SIZE : int = 31
+    boardSizeInput : str
+    columnPositionInput : str
+    rowPositionInput : str
 
-DEFAULT_POSITION : int = 0
+    boardSize : int
+    columnPosition : int
+    rowPosition : int
 
-boardSizeInput : str
-columnPositionInput : str
-rowPositionInput : str
+    continue_to_play : bool =True #Booléen contrôlant la répétition du programme.
 
-boardSize : int
-columnPosition : int
-rowPosition : int
+    resultListOfMoves : ListOfMoves
 
-board : list
+    while(continue_to_play):
+        columnPosition = INVALIDE_SIZE_VALUE # reset the values on start
+        rowPosition = INVALIDE_SIZE_VALUE # reset the values on start
+        resultListOfMoves = ListOfMoves()
 
-resultListOfMoves : ListOfMoves
-
-while(continue_to_play):
-    columnPosition = INVALIDE_SIZE_VALUE # reset the values on start
-    rowPosition = INVALIDE_SIZE_VALUE # reset the values on start
-    resultListOfMoves = ListOfMoves()
-
-    try:
-        boardSizeInput = input("Rentrer la taille de l'échiquier que le cavalier va parcourir (par exemple: 5 pour 5X5): ") #Taille de l'échiquier
-        boardSize = int(boardSizeInput)
-    except:
-        boardSize = INVALIDE_SIZE_VALUE #valeur en cas d'exception 
-
-    print("")
-    if(boardSize == INVALIDE_SIZE_VALUE or boardSize < MIN_BOARD_SIZE): #teste si il y a eu une exception
-        print("Aille vous n'avez pas rentré un nombre entier strictement positif, veuillez réessayer!") 
-    elif(boardSize == MIN_BOARD_SIZE):
-        print("La solution est: [(0,0)]") #Solution trivial
-    elif(boardSize in UNSOLVABLE_SIZES):
-        print("L'échiquier est trop petit pour résoudre le problème.") #Impossible à réssoudre donc aucun intéret a faire les calcules
-    elif(boardSize > MAX_BOARD_SIZE):
-        print(f"La taille d'échéquier que vous avez rentrée est trop grande pour que l'algorithme puisse le résoudre (max:{MAX_BOARD_SIZE})")
-    else:
-        while(columnPosition < 0 or columnPosition>=boardSize):#test si la valeur rentrée est correct
-            try:
-                columnPositionInput = input(f"Rentrer la colonne de 0 à {boardSize-1} sur laquelle le cavalier vas commencer son tour: ") #Position initiale en colonne
-                columnPosition = int(columnPositionInput)
-            except:
-                print("Vous avez rentré une valeur non conforme, la colonne de départ sera la ",DEFAULT_POSITION)
-                columnPosition = DEFAULT_POSITION
-
-        while(rowPosition < 0 or rowPosition>=boardSize):#test si la valeur rentrée est correct
-            try:
-                rowPositionInput = input(f"Rentrer la ligne de 0 à {boardSize-1} sur laquelle le cavalier va commencer son tour: ") #Position initiale en ligne
-                rowPosition = int(rowPositionInput)
-            except:
-                print("Vous avez rentré une valeur non conforme, la ligne de départ sera la ",DEFAULT_POSITION)
-                rowPosition = DEFAULT_POSITION
-        print("")
-        input(f"Tout est prêt! Appuyez sur Entrée pour générer la solution au problème du tour du cavalier sur un plateau de {boardSize} par {boardSize} avec la position de départ à la case ({columnPosition},{rowPosition}) ")
-
-        hamiltongraph = hamiltonGraphMaker(boardSize)
         try:
-            resultListOfMoves = solving(boardSize,hamiltongraph,columnPosition,rowPosition,resultListOfMoves)
+            boardSizeInput = input("Rentrer la taille de l'échiquier que le cavalier va parcourir (par exemple: 5 pour 5X5): ") #Taille de l'échiquier
+            boardSize = int(boardSizeInput)
+        except:
+            boardSize = INVALIDE_SIZE_VALUE #valeur en cas d'exception 
 
-            if(resultListOfMoves.isSolution(boardSize)):
-                print("Une des solutions est:",resultListOfMoves.getListOfMoves()) #affiche la solution
-            else:
-                print(f"Aucune solution n'a été trouvée pour un échiquier de {boardSize} par {boardSize} avec la position de départ à la case ({columnPosition},{rowPosition})")
-        except RecursionError:
-            print(f"La taille de l'échiquier est trop grande pour que l'algorithme puisse résoudre le tour du cavalier (max:{MAX_BOARD_SIZE})")
+        print("")
+        if(boardSize == INVALIDE_SIZE_VALUE or boardSize < MIN_BOARD_SIZE): #teste si il y a eu une exception
+            print("Aille vous n'avez pas rentré un nombre entier strictement positif, veuillez réessayer!") 
+        elif(boardSize == MIN_BOARD_SIZE):
+            print("La solution est: [(0,0)]") #Solution trivial
+        elif(boardSize in UNSOLVABLE_SIZES):
+            print("L'échiquier est trop petit pour résoudre le problème.") #Impossible à réssoudre donc aucun intéret a faire les calcules
+        elif(boardSize > MAX_BOARD_SIZE):
+            print(f"La taille d'échéquier que vous avez rentrée est trop grande pour que l'algorithme puisse le résoudre (max:{MAX_BOARD_SIZE})")
+        else:
+            while(columnPosition < 0 or columnPosition>=boardSize):#test si la valeur rentrée est correct
+                try:
+                    columnPositionInput = input(f"Rentrer la colonne de 0 à {boardSize-1} sur laquelle le cavalier vas commencer son tour: ") #Position initiale en colonne
+                    columnPosition = int(columnPositionInput)
+                except:
+                    print("Vous avez rentré une valeur non conforme, la colonne de départ sera la ",DEFAULT_POSITION)
+                    columnPosition = DEFAULT_POSITION
 
-    print("Voulez-vous recommencer?  (Tapper 'Non' pour quitter)")
-    choice = str(input("")).lower() #Permet de rejouer ou quitter le programme
-    if(choice=="non" or choice=="n" or choice=="no"):
-        continue_to_play = False
-    
-print("Au revoire !")
+            while(rowPosition < 0 or rowPosition>=boardSize):#test si la valeur rentrée est correct
+                try:
+                    rowPositionInput = input(f"Rentrer la ligne de 0 à {boardSize-1} sur laquelle le cavalier va commencer son tour: ") #Position initiale en ligne
+                    rowPosition = int(rowPositionInput)
+                except:
+                    print("Vous avez rentré une valeur non conforme, la ligne de départ sera la ",DEFAULT_POSITION)
+                    rowPosition = DEFAULT_POSITION
+            print("")
+            input(f"Tout est prêt! Appuyez sur Entrée pour générer la solution au problème du tour du cavalier sur un plateau de {boardSize} par {boardSize} avec la position de départ à la case ({columnPosition},{rowPosition}) ")
+
+            hamiltongraph = hamiltonGraphMaker(boardSize)
+            try:
+                resultListOfMoves = solving(boardSize,hamiltongraph,columnPosition,rowPosition,resultListOfMoves)
+
+                if(resultListOfMoves.isSolution(boardSize)):
+                    print("Une des solutions est:",resultListOfMoves.getListOfMoves()) #affiche la solution
+                else:
+                    print(f"Aucune solution n'a été trouvée pour un échiquier de {boardSize} par {boardSize} avec la position de départ à la case ({columnPosition},{rowPosition})")
+            except RecursionError:
+                print(f"La taille de l'échiquier est trop grande pour que l'algorithme puisse résoudre le tour du cavalier (max:{MAX_BOARD_SIZE})")
+
+        print("Voulez-vous recommencer?  (Tapper 'Non' pour quitter)")
+        choice = str(input("")).lower() #Permet de rejouer ou quitter le programme
+        if(choice=="non" or choice=="n" or choice=="no"):
+            continue_to_play = False
+
+    print("Au revoire !")
+
+
+if __name__ == "__main__" and sys.platform != "emscripten":
+    main()
