@@ -222,8 +222,10 @@ def solving(boardSize:int,hamiltongraph:list,column:int,row:int,listOfMoves:List
     return ListOfMoves([])
 
 def setUpAndSolves(boardSize:int,columnPosition:int,rowPosition:int)->str:
-    if(boardSize == INVALIDE_SIZE_VALUE or boardSize < MIN_BOARD_SIZE or boardSize in UNSOLVABLE_SIZES or boardSize >MAX_BOARD_SIZE):
-        return "Wrong value"
+    if(boardSize < MIN_BOARD_SIZE or boardSize >MAX_BOARD_SIZE):
+        return f"Invalide size, please input a value strictly between {MIN_BOARD_SIZE} and {MAX_BOARD_SIZE}"
+    elif(boardSize in UNSOLVABLE_SIZES):
+        return f"No solution for a board of size {boardSize} by {boardSize}"
     elif(boardSize == MIN_BOARD_SIZE):
         return "[(0,0)]"
 
@@ -240,7 +242,7 @@ def setUpAndSolves(boardSize:int,columnPosition:int,rowPosition:int)->str:
     if(solvedMoves.isSolution(boardSize)):
         return str(solvedMoves.getListOfMoves())
 
-    return "No solution found"
+    return f"No solution found for a {boardSize} by {boardSize} board starting from {columnPosition,rowPosition}"
 
 def printBoard(board:list):
     """Print a board or move graph in a simple text-based format.
