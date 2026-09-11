@@ -213,6 +213,26 @@ def solving(boardSize:int,hamiltongraph:list,column:int,row:int,listOfMoves:List
             updatingHamiltonGraph(move[1],move[2],hamiltongraph,False)
     return ListOfMoves([])
 
+def setUpAndSolves(boardSize:int,columnPosition:int,rowPosition:int)->ListOfMoves:
+    resultListOfMoves = ListOfMoves()
+
+    if(boardSize == INVALIDE_SIZE_VALUE or boardSize < MIN_BOARD_SIZE or boardSize in UNSOLVABLE_SIZES or boardSize >MAX_BOARD_SIZE):
+        return resultListOfMoves
+    elif(boardSize == MIN_BOARD_SIZE):
+        resultListOfMoves.addMove(0,0)
+        resultListOfMoves.isSolution(1)
+        return resultListOfMoves
+
+    if(columnPosition < 0 or columnPosition>=boardSize):#test si la valeur rentrée est correct
+        columnPosition = DEFAULT_POSITION
+
+    if(rowPosition < 0 or rowPosition>=boardSize):#test si la valeur rentrée est correct
+        rowPosition = DEFAULT_POSITION
+    
+    hamiltongraph = hamiltonGraphMaker(boardSize)
+    resultListOfMoves = solving(boardSize,hamiltongraph,columnPosition,rowPosition,resultListOfMoves)
+    return resultListOfMoves
+
 def printBoard(board:list):
     """Print a board or move graph in a simple text-based format.
 
