@@ -1,6 +1,6 @@
 import sys
 
-knightsMovements=[(2,1),(2,-1),(-2,1),(-2,-1),(1,2),(1,-2),(-1,2),(-1,-2)] #Liste des mouvements possibles du cavalier en coordonnées relatives.
+knightsMovements=[(2,1),(2,-1),(-2,1),(-2,-1),(1,2),(1,-2),(-1,2),(-1,-2)] #List of possible moves for the knight in relative coordinates.
 
 INVALIDE_SIZE_VALUE : int = -1
 MIN_BOARD_SIZE : int = 1
@@ -8,6 +8,76 @@ UNSOLVABLE_SIZES : list = [2,3]
 MAX_BOARD_SIZE : int = 31
 
 DEFAULT_POSITION : int = 0
+
+def moveNumToMoveLetter(num : int)->str:
+    if(num == 0):
+        return 'A'
+    if(num == 1):
+        return 'B'
+    if(num == 2):
+        return 'C'
+    if(num == 3):
+        return 'D'
+    if(num == 4):
+        return 'E'
+    if(num == 5):
+        return 'F'
+    if(num == 6):
+        return 'G'
+    if(num == 7):
+        return 'H'
+    if(num == 8):
+        return 'I'
+    if(num == 9):
+        return 'J'
+    if(num == 10):
+        return 'K'
+    if(num == 11):
+        return 'L'
+    if(num == 12):
+        return 'M'
+    if(num == 13):
+        return 'N'
+    if(num == 14):
+        return 'O'
+    if(num == 15):
+        return 'P'
+    if(num == 16):
+        return 'Q'
+    if(num == 17):
+        return 'R'
+    if(num == 18):
+        return 'S'
+    if(num == 19):
+        return 'T'
+    if(num == 20):
+        return 'U'
+    if(num == 21):
+        return 'V'
+    if(num == 22):
+        return 'W'
+    if(num == 23):
+        return 'X'
+    if(num == 24):
+        return 'Y'
+    if(num == 25):
+        return 'Z'
+    if(num == 26):
+        return 'AA'
+    if(num == 27):
+        return 'AB'
+    if(num == 28):
+        return 'AC'
+    if(num == 29):
+        return 'AD'
+    if(num == 30):
+        return 'AE'
+    if(num == 31):
+        return 'AF'
+    if(num == 32):
+        return 'AG'
+    else:
+        return 'Invalid'
 
 class ListOfMoves:
     def __init__(self,listOfMoves:list | None = None):
@@ -45,6 +115,14 @@ class ListOfMoves:
     def getListOfMoves(self)->list:
         """Return the list of stored board positions."""
         return self.__list_of_moves
+
+    def getListOfMovesAsSTR(self)->str:
+        """Return the list of stored board positions as string."""
+        returnList : str = "["
+        for move in self.__list_of_moves:
+            returnList += moveNumToMoveLetter(move[0]) + str(move[1])+","
+        returnList = returnList[0:len(returnList)-1] + "]"
+        return returnList
 
     def isListOfMovesFull(self,boardSize:int)->bool:
         """Return whether the list contains one move for every board square.
@@ -240,7 +318,7 @@ def setUpAndSolves(boardSize:int,columnPosition:int,rowPosition:int)->str:
     solvedMoves = solving(boardSize,hamiltongraph,columnPosition,rowPosition,resultListOfMoves)
 
     if(solvedMoves.isSolution(boardSize)):
-        return str(solvedMoves.getListOfMoves())
+        return solvedMoves.getListOfMovesAsSTR()
 
     return f"No solution found for a {boardSize} by {boardSize} board starting from {columnPosition,rowPosition}"
 
