@@ -120,7 +120,7 @@ class ListOfMoves:
         """Return the list of stored board positions as string."""
         returnList : str = "["
         for move in self.__list_of_moves:
-            returnList += moveNumToMoveLetter(move[0]) + str(move[1])+","
+            returnList += moveNumToMoveLetter(move[0]) + str(move[1] + 1)+","
         returnList = returnList[0:len(returnList)-1] + "]"
         return returnList
 
