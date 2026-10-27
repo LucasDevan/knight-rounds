@@ -2,7 +2,7 @@
 
 A small Python program that searches for a knight's tour: a sequence of chess-knight moves that visits every square on a square board exactly once.
 
-The program uses a Warnsdorff-style move-ordering heuristic with backtracking to find a tour, then displays the sequence of visited squares.
+The program uses a move-ordering heuristic with backtracking to find a tour, then displays the sequence of visited squares.
 
 ## Requirements
 
